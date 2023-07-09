@@ -33,27 +33,23 @@ import Layout from "../layouts/Layout.astro";
 </style>
 
 <script>
+    /* Variables de entorno */
+    const SupabasePubicApi: string = import.meta.env.PUBLIC_SUPABASE_API;
+    const SupabaseBBDD: string = import.meta.env.PUBLIC_SUPABASE_BBDD;
+    const SupabaseUrl: string = import.meta.env.PUBLIC_SUPABASE_URL;
     /* Interaccion */
     const button = document.querySelector("#enviar");
     const email = document.querySelector("#email") as HTMLInputElement;
     const toastBox = document.querySelector("#toastBox") as HTMLElement;
     button?.addEventListener("click", () => {
         if (email.value && validateEmail(email.value)) {
-            fetch("newsletter", email.value);
+            registerEmail(email.value);
         } else
-            toastMessage(
-                "red",
-                "fa-solid fa-xmark",
-                "El email no es correcto"
-            );
+            toastMessage("red", "fa-solid fa-xmark", "El email no es correcto");
     });
 
     /* Error */
-    function toastMessage(
-        color: string = "red",
-        icon: string = "fa-solid fa-xmark",
-        message: string = ""
-    ) {
+    function toastMessage(color: string, icon: string, message: string) {
         toastBox.innerHTML = `<div class="toast flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
 					<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-${color}-500 bg-${color}-100 rounded-lg dark:bg-${color}-800 dark:text-${color}-200">
 						<i class="${icon}""></i>
@@ -69,7 +65,7 @@ import Layout from "../layouts/Layout.astro";
 
         /* Borrar en dos segundos */
         setTimeout(() => {
-            // toast.style.display = "none";
+            toast.style.display = "none";
         }, 2000);
 
         /* Borrar al pulsar */
@@ -80,14 +76,13 @@ import Layout from "../layouts/Layout.astro";
 
     /* Suprabase */
     import { createClient } from "@supabase/supabase-js";
-    const supabaseUrl = "https://etkudycclirzvjwclosn.supabase.co";
-    const supabaseKey =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0a3VkeWNjbGlyenZqd2Nsb3NuIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODczODEyMTcsImV4cCI6MjAwMjk1NzIxN30.o0BEzH0UfyH93brUd5UjlXas_hkcYWIkQRErBKStsHI";
+    const supabaseUrl = SupabaseUrl;
+    const supabaseKey = SupabasePubicApi;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    async function fetch(database: string, email: string) {
+    async function registerEmail(email: string) {
         const { data, error } = await supabase
-            .from(database)
+            .from(SupabaseBBDD)
             .upsert({ email: email }, { onConflict: "id" });
         if (error)
             toastMessage(
@@ -104,7 +99,7 @@ import Layout from "../layouts/Layout.astro";
     }
 
     /* Validar Email */
-    const validateEmail = (email:string) => {
+    const validateEmail = (email: string) => {
         return String(email)
             .toLowerCase()
             .match(
