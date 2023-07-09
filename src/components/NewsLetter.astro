@@ -1,0 +1,114 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Welcome to Astro.">
+    <main class="flex flex-col justify-center items-center h-screen w-screen">
+        <div id="toastBox"></div>
+        <div class="w-full container">
+            <div class="flex gap-5">
+                <div class="w-2/3">
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id="email"
+                        type="email"
+                        placeholder="Email"
+                    />
+                </div>
+                <button
+                    class="w-1/3 p-1 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded"
+                    id="enviar">Me Subscribo!</button
+                >
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    #toastBox {
+        position: absolute;
+        right: 1em;
+        top: 1em;
+    }
+</style>
+
+<script>
+    /* Interaccion */
+    const button = document.querySelector("#enviar");
+    const email = document.querySelector("#email") as HTMLInputElement;
+    const toastBox = document.querySelector("#toastBox") as HTMLElement;
+    button?.addEventListener("click", () => {
+        if (email.value && validateEmail(email.value)) {
+            fetch("newsletter", email.value);
+        } else
+            toastMessage(
+                "red",
+                "fa-solid fa-xmark",
+                "El email no es correcto"
+            );
+    });
+
+    /* Error */
+    function toastMessage(
+        color: string = "red",
+        icon: string = "fa-solid fa-xmark",
+        message: string = ""
+    ) {
+        toastBox.innerHTML = `<div class="toast flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+					<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-${color}-500 bg-${color}-100 rounded-lg dark:bg-${color}-800 dark:text-${color}-200">
+						<i class="${icon}""></i>
+					</div>
+					<div class="ml-3 text-sm font-normal">${message}</div>
+					<button type="button" class="closeButton ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" data-dismiss-target="#toast-success" aria-label="Close">
+						<i class="fa-solid fa-xmark"></i>
+					</button>
+				</div>`;
+
+        let toast = document.querySelector(`.toast`) as HTMLElement;
+        let btn = document.querySelector(`.closeButton`) as HTMLElement;
+
+        /* Borrar en dos segundos */
+        setTimeout(() => {
+            // toast.style.display = "none";
+        }, 2000);
+
+        /* Borrar al pulsar */
+        btn?.addEventListener("click", () => {
+            toast.style.display = "none";
+        });
+    }
+
+    /* Suprabase */
+    import { createClient } from "@supabase/supabase-js";
+    const supabaseUrl = "https://etkudycclirzvjwclosn.supabase.co";
+    const supabaseKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0a3VkeWNjbGlyenZqd2Nsb3NuIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODczODEyMTcsImV4cCI6MjAwMjk1NzIxN30.o0BEzH0UfyH93brUd5UjlXas_hkcYWIkQRErBKStsHI";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    async function fetch(database: string, email: string) {
+        const { data, error } = await supabase
+            .from(database)
+            .upsert({ email: email }, { onConflict: "id" });
+        if (error)
+            toastMessage(
+                "red",
+                "fa-solid fa-xmark",
+                "Ya tenemos registrado este email!"
+            );
+        else
+            toastMessage(
+                "green",
+                "fa-solid fa-check",
+                "Email registrado correctamente!"
+            );
+    }
+
+    /* Validar Email */
+    const validateEmail = (email:string) => {
+        return String(email)
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+    };
+</script>
